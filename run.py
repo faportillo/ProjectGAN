@@ -26,12 +26,12 @@ if __name__ == '__main__':
     """
         DEFINE DATASET AND TRAINING HYPERPARAMETERS
     """
-    manualSeed = 999
+    manualSeed = None
     print("Random Seed, {}".format(manualSeed))
     random.seed(manualSeed)
     torch.manual_seed(manualSeed)
 
-    dataroot = os.path.abspath("data/CelebA")
+    dataroot = os.path.abspath("D:\CelebA")
     model_type = 'SAGAN'  # Supported : DCGAN, SAGAN
     batch_size = 128
     image_size = 64
@@ -134,14 +134,14 @@ if __name__ == '__main__':
                 b_size = real_cpu.size(0)
                 # Forward pass REAL batch through Discrim D(x)
                 d = netD(real_cpu).view(-1)
-
                 # Generate batch of latent vectors
                 noise = torch.randn(b_size, nz, 1, 1, device=device)
                 # Generate FAKE image batch with Gen
                 fake = netG(noise)
                 # Classify all fake batch with Discrim: D(G(z))
                 d_g = netD(fake.detach()).view(-1)
-
+                ###test_d = d_g.cpu().detach().numpy() #Test print
+                print(test_d)
                 # Calculate losses for real and fake batches
                 dis_loss = loss_discriminator(d, d_g, loss_type=loss_type, batch_size=batch_size)
                 # Calculate gradients for Discrim
