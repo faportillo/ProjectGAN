@@ -108,8 +108,8 @@ if __name__ == '__main__':
     fake_label = 0
 
     # Setup optimizers for Generator and Discriminator
-    optimizerG = optim.Adam(netG.parameters(), lr=g_lr, betas=(beta1, beta2))
-    optimizerD = optim.Adam(netD.parameters(), lr=d_lr, betas=(beta1, beta2))
+    optimizerG = optim.Adam(filter(lambda p: p.requires_grad, netG.zero_grad()), lr=g_lr, betas=(beta1, beta2))
+    optimizerD = optim.Adam(filter(lambda p: p.requires_grad, netD.zero_grad()), lr=d_lr, betas=(beta1, beta2))
 
     """
         TRAINING LOOP
@@ -129,6 +129,7 @@ if __name__ == '__main__':
             for _ in range(discrim_iters):
                 ## Train with all-real batch
                 netD.zero_grad()
+                netG.zero_grad()
                 # Format batch
                 real_cpu = data[0].to(device)
                 # Forward pass REAL batch through Discrim D(x)
