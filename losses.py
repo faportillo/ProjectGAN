@@ -16,7 +16,7 @@ def loss_discriminator(d, d_g, loss_type='BCE', batch_size=None):
     elif loss_type == 'Wass':  # Wasserstein Distance Loss
         return -d.mean() + d_g.mean()
     elif loss_type == 'Hinge':  # Hinge Loss
-        return nn.ReLU()(1.0 - d).mean() + nn.ReLU()(1.0 + d_g).mean()
+        return nn.ReLU()(1.0 - d.mean()) + nn.ReLU()(1.0 + d_g.mean())
     else:
         raise ValueError('''Unsupported Loss Type!
                             Supported losses for Discriminator are:

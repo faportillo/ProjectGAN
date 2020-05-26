@@ -33,7 +33,7 @@ if __name__ == '__main__':
     random.seed(manualSeed)
     torch.manual_seed(manualSeed)'''
 
-    dataroot = os.path.abspath("./data/CelebA")
+    dataroot = os.path.abspath("D:\CelebA")
     model_type = 'DCGAN'  # Supported : DCGAN, SAGAN
     batch_size = 128
     image_size = 64
@@ -41,7 +41,7 @@ if __name__ == '__main__':
     nz = 100  # Size of z latent vector (i.e. size of generator input)
     ngf = 128  # Size of feature maps in generator, relates to depth
     ndf = 128  # Size of feature maps in discriminator, relates to depth
-    num_epochs = 10 # Number of training epochs
+    num_epochs = 10  # Number of training epochs
     g_lr = 0.0001
     d_lr = 0.0004
     beta1 = 0.0  # Beta1 hyperparam for Adam optimizers
@@ -99,7 +99,7 @@ if __name__ == '__main__':
     if (device.type == 'cuda') and (ngpu > 1):
         netD = nn.DataParallel(netD, list(range(ngpu)))
 
-    #netD.apply(init_weights)
+    # netD.apply(init_weights)
     print(netD)
 
     # Create batch of latent vectors used to visualize
