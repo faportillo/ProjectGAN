@@ -20,7 +20,7 @@ from gans import init_weights, GeneratorBasic, DiscriminatorBasic, \
 from losses import loss_discriminator, loss_generator
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Set -dev to True or False ")
+    parser = argparse.ArgumentParser()
     parser.add_argument('-dev', type=bool, default=False, help='Set -dev to True so progress images are not displayed' )
     args = parser.parse_args()
     """
