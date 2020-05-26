@@ -31,7 +31,7 @@ if __name__ == '__main__':
     random.seed(manualSeed)
     torch.manual_seed(manualSeed)
 
-    dataroot = os.path.abspath("D:\CelebA")
+    dataroot = os.path.abspath("data/CelebA")
     model_type = 'SAGAN'  # Supported : DCGAN, SAGAN
     batch_size = 128
     image_size = 64
