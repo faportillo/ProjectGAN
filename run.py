@@ -1,6 +1,7 @@
 import argparse
 import os
 import random
+import argparse
 import torch
 import torch.nn as nn
 import torch.nn.parallel
@@ -19,7 +20,9 @@ from gans import init_weights, GeneratorBasic, DiscriminatorBasic, \
 from losses import loss_discriminator, loss_generator
 
 if __name__ == '__main__':
-
+    parser = argparse.ArgumentParser(description="Set -dev to True or False ")
+    parser.add_argument('-dev', type=bool, default=False, help='Set -dev to True so progress images are not displayed' )
+    args = parser.parse_args()
     """
         DEFINE DATASET AND TRAINING HYPERPARAMETERS
     """
@@ -180,39 +183,40 @@ if __name__ == '__main__':
     # Ssve models after training
     torch.save(netD.state_dict(), 'saved_models/discriminator_' + model_type + '.pt')
     torch.save(netG.state_dict(), 'saved_models/generator' + model_type + '.pt')
-    plt.figure(figsize=(10, 5))
-    plt.title("Generator and Discriminator Loss During Training")
-    plt.plot(G_losses, label="G")
-    plt.plot(D_losses, label="D")
-    plt.xlabel("iterations")
-    plt.ylabel("Loss")
-    plt.legend()
-    # plt.show()
-    plt.savefig('GenDiscrimLoss.png', bbox_inches='tight')
+    if args.dev:
+        plt.figure(figsize=(10, 5))
+        plt.title("Generator and Discriminator Loss During Training")
+        plt.plot(G_losses, label="G")
+        plt.plot(D_losses, label="D")
+        plt.xlabel("iterations")
+        plt.ylabel("Loss")
+        plt.legend()
+        # plt.show()
+        plt.savefig('GenDiscrimLoss.png', bbox_inches='tight')
 
-    # %%capture
-    fig = plt.figure(figsize=(8, 8))
-    plt.axis("off")
-    ims = [[plt.imshow(np.transpose(i, (1, 2, 0)), animated=True)] for i in img_list]
-    ani = animation.ArtistAnimation(fig, ims, interval=1000, repeat_delay=1000, blit=True)
+        # %%capture
+        fig = plt.figure(figsize=(8, 8))
+        plt.axis("off")
+        ims = [[plt.imshow(np.transpose(i, (1, 2, 0)), animated=True)] for i in img_list]
+        ani = animation.ArtistAnimation(fig, ims, interval=1000, repeat_delay=1000, blit=True)
 
-    HTML(ani.to_jshtml())
+        HTML(ani.to_jshtml())
 
-    # Grab a batch of real images from the dataloader
-    real_batch = next(iter(dataloader))
+        # Grab a batch of real images from the dataloader
+        real_batch = next(iter(dataloader))
 
-    # Plot the real images
-    plt.figure(figsize=(15, 15))
-    plt.subplot(1, 2, 1)
-    plt.axis("off")
-    plt.title("Real Images")
-    plt.imshow(
-        np.transpose(vutils.make_grid(real_batch[0].to(device)[:64], padding=5, normalize=True).cpu(), (1, 2, 0)))
-    plt.savefig("real_images.png", bbox_inches='tight')
-    # Plot the fake images from the last epoch
-    plt.subplot(1, 2, 2)
-    plt.axis("off")
-    plt.title("Fake Images")
-    plt.imshow(np.transpose(img_list[-1], (1, 2, 0)))
-    plt.show()
-    plt.savefig("fake_images.png", bbox_inches='tight')
+        # Plot the real images
+        plt.figure(figsize=(15, 15))
+        plt.subplot(1, 2, 1)
+        plt.axis("off")
+        plt.title("Real Images")
+        plt.imshow(
+            np.transpose(vutils.make_grid(real_batch[0].to(device)[:64], padding=5, normalize=True).cpu(), (1, 2, 0)))
+        plt.savefig("real_images.png", bbox_inches='tight')
+        # Plot the fake images from the last epoch
+        plt.subplot(1, 2, 2)
+        plt.axis("off")
+        plt.title("Fake Images")
+        plt.imshow(np.transpose(img_list[-1], (1, 2, 0)))
+        plt.show()
+        plt.savefig("fake_images.png", bbox_inches='tight')
