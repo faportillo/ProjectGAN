@@ -33,20 +33,20 @@ if __name__ == '__main__':
     random.seed(manualSeed)
     torch.manual_seed(manualSeed)'''
 
-    dataroot = os.path.abspath("D:\CelebA")
-    model_type = 'SAGAN'  # Supported : DCGAN, SAGAN
+    dataroot = os.path.abspath("./data/CelebA")
+    model_type = 'DCGAN'  # Supported : DCGAN, SAGAN
     batch_size = 128
     image_size = 64
     nc = 3  # Number of channels in the training images
     nz = 100  # Size of z latent vector (i.e. size of generator input)
-    ngf = 64  # Size of feature maps in generator
-    ndf = 64  # Number of training epochs
-    num_epochs = 10
+    ngf = 128  # Size of feature maps in generator, relates to depth
+    ndf = 128  # Size of feature maps in discriminator, relates to depth
+    num_epochs = 10 # Number of training epochs
     g_lr = 0.0001
     d_lr = 0.0004
     beta1 = 0.0  # Beta1 hyperparam for Adam optimizers
     beta2 = 0.9
-    loss_type = 'Hinge'  # Options: BCE, Hinge, Wass
+    loss_type = 'BCE'  # Options: BCE, Hinge, Wass
     ngpu = 1  # Number of GPUs available. Use 0 for CPU mode.
     workers = 32  # number of workers for dataloader
     discrim_iters = 3  # Num of times to train discriminator before generator
@@ -99,7 +99,7 @@ if __name__ == '__main__':
     if (device.type == 'cuda') and (ngpu > 1):
         netD = nn.DataParallel(netD, list(range(ngpu)))
 
-    netD.apply(init_weights)
+    #netD.apply(init_weights)
     print(netD)
 
     # Create batch of latent vectors used to visualize
@@ -139,13 +139,13 @@ if __name__ == '__main__':
                 real_cpu = data[0].to(device)
                 b_size = real_cpu.size(0)
                 # Forward pass REAL batch through Discrim D(x)
-                d = netD(real_cpu).view(-1, 1)
+                d = netD(real_cpu).view(-1).unsqueeze(1)
                 # Generate batch of latent vectors
                 noise = torch.randn(b_size, nz, 1, 1, device=device)
                 # Generate FAKE image batch with Gen
                 fake = netG(noise)
                 # Classify all fake batch with Discrim: D(G(z))
-                d_g = netD(fake.detach()).view(-1)
+                d_g = netD(fake.detach()).view(-1).unsqueeze(1)
                 ###test_d = d_g.cpu().detach().numpy() # Test print
                 ###print(test_d) # Test print
                 # Calculate losses for real and fake batches
@@ -162,7 +162,7 @@ if __name__ == '__main__':
             # Generate batch of latent vectors
             noise = torch.randn(batch_size, nz, 1, 1, device=device)
             fake = netG(noise)
-            d_g = netD(fake).view(-1)
+            d_g = netD(fake).view(-1).unsqueeze(1)
             # Calculate Gen's loss based on output
             gen_loss = loss_generator(d_g, loss_type=loss_type, batch_size=batch_size)
             # Calcualte gradient for G
