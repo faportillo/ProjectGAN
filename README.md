@@ -1,2 +1,6 @@
 # ProjectGAN
-Using different Generative Adversarial Networks (GANs) to generate new faces based on the CelebA dataset. Currently supported models: DCGAN, SAGAN
+Using different Generative Adversarial Networks (GANs) to generate images.
+
+Currently supported models: DCGAN, SAGAN
+
+Currently supported datasets: CelebA
