@@ -184,7 +184,7 @@ class DiscriminatorSAGAN(nn.Module):
                 nn.Conv2d(self.ndf * mult, self.ndf * (mult * 2), 4, 2, 1, bias=False)))
             self.layers.append(nn.BatchNorm2d((self.ndf * mult) * 2))
             self.layers.append(nn.LeakyReLU(0.2, inplace=True))
-            if mult > (2 ** (repeat_num - 1)) // 2:
+            if mult > (2 ** (repeat_num - 1)) // 4:
                 self.layers.append(SelfAttn((self.ndf * mult) * 2))
             mult = mult * 2
         print("Discriminator->OFM Multiplier (Last): {}".format(self.ndf * mult))

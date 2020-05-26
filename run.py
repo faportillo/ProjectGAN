@@ -2,6 +2,7 @@ import argparse
 import os
 import random
 import argparse
+import sys
 import torch
 import torch.nn as nn
 import torch.nn.parallel
@@ -92,7 +93,7 @@ if __name__ == '__main__':
     if (device.type == 'cuda') and (ngpu > 1):
         netG = nn.DataParallel(netG, list(range(ngpu)))
 
-    netG.apply(init_weights)
+    # netG.apply(init_weights)
     print(netG)
 
     if (device.type == 'cuda') and (ngpu > 1):
@@ -135,10 +136,10 @@ if __name__ == '__main__':
                 netD.zero_grad()
                 netG.zero_grad()
                 # Format batch
-                b_size = real_cpu.size(0)
                 real_cpu = data[0].to(device)
+                b_size = real_cpu.size(0)
                 # Forward pass REAL batch through Discrim D(x)
-                d = netD(real_cpu).view(-1)
+                d = netD(real_cpu).view(-1, 1)
                 # Generate batch of latent vectors
                 noise = torch.randn(b_size, nz, 1, 1, device=device)
                 # Generate FAKE image batch with Gen

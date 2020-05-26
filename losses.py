@@ -7,8 +7,8 @@ def loss_discriminator(d, d_g, loss_type='BCE', batch_size=None):
     if loss_type == 'BCE':  # Binary Cross-Entropy Error
         try:
             if batch_size is not None:
-                return nn.BCEWithLogitsLoss()(d, Variable(torch.ones(batch_size).cuda())) \
-                       + nn.BCEWithLogitsLoss()(d_g, Variable(torch.zeros(batch_size).cuda()))
+                return nn.BCEWithLogitsLoss()(d, Variable(torch.ones(batch_size, 1).cuda())) \
+                       + nn.BCEWithLogitsLoss()(d_g, Variable(torch.zeros(batch_size, 1).cuda()))
             else:
                 raise TypeError
         except TypeError:
@@ -27,7 +27,7 @@ def loss_generator(d_g, loss_type='BCE', batch_size=None):
     if loss_type == 'BCE':  # Binary Cross-Entropy Error
         try:
             if batch_size is not None:
-                return nn.BCEWithLogitsLoss()(d_g, Variable(torch.ones(batch_size).cuda()))
+                return nn.BCEWithLogitsLoss()(d_g, Variable(torch.ones(batch_size, 1).cuda()))
             else:
                 raise TypeError
         except TypeError:
