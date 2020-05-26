@@ -21,15 +21,16 @@ from losses import loss_discriminator, loss_generator
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-dev', type=bool, default=False, help='Set -dev to True so progress images are not displayed')
+    parser.add_argument('-dev', type=bool, default=False,
+                        help='Set -dev to True so progress images are not displayed')
     args = parser.parse_args()
     """
         DEFINE DATASET AND TRAINING HYPERPARAMETERS
     """
-    manualSeed = None
+    '''manualSeed = 999
     print("Random Seed, {}".format(manualSeed))
     random.seed(manualSeed)
-    torch.manual_seed(manualSeed)
+    torch.manual_seed(manualSeed)'''
 
     dataroot = os.path.abspath("D:\CelebA")
     model_type = 'SAGAN'  # Supported : DCGAN, SAGAN
@@ -70,7 +71,8 @@ if __name__ == '__main__':
     plt.axis("off")
     plt.title("Training Images")
     plt.imshow(
-        np.transpose(vutils.make_grid(real_batch[0].to(device)[:64], padding=2, normalize=True).cpu(), (1, 2, 0)))
+        np.transpose(vutils.make_grid(real_batch[0].to(device)[:64],
+                                      padding=2, normalize=True).cpu(), (1, 2, 0)))
     # plt.show()
 
     '''
@@ -85,7 +87,7 @@ if __name__ == '__main__':
         netD = DiscriminatorSAGAN(nc=nc, ndf=ndf, ngpu=ngpu).to(device)
     else:
         print("Unsupported Model type!")
-        exit(1)
+        sys.exit()
     # Do multi-gpu, if possible
     if (device.type == 'cuda') and (ngpu > 1):
         netG = nn.DataParallel(netG, list(range(ngpu)))
@@ -108,8 +110,10 @@ if __name__ == '__main__':
     fake_label = 0
 
     # Setup optimizers for Generator and Discriminator
-    optimizerG = optim.Adam(filter(lambda p: p.requires_grad, netG.zero_grad()), lr=g_lr, betas=(beta1, beta2))
-    optimizerD = optim.Adam(filter(lambda p: p.requires_grad, netD.zero_grad()), lr=d_lr, betas=(beta1, beta2))
+    optimizerG = optim.Adam(filter(lambda p: p.requires_grad,
+                                   netG.parameters()), lr=g_lr, betas=(beta1, beta2))
+    optimizerD = optim.Adam(filter(lambda p: p.requires_grad,
+                                   netD.parameters()), lr=d_lr, betas=(beta1, beta2))
 
     """
         TRAINING LOOP
@@ -211,7 +215,8 @@ if __name__ == '__main__':
         plt.axis("off")
         plt.title("Real Images")
         plt.imshow(
-            np.transpose(vutils.make_grid(real_batch[0].to(device)[:64], padding=5, normalize=True).cpu(), (1, 2, 0)))
+            np.transpose(vutils.make_grid(real_batch[0].to(device)[:64],
+                                          padding=5, normalize=True).cpu(), (1, 2, 0)))
         plt.savefig("real_images.png", bbox_inches='tight')
         # Plot the fake images from the last epoch
         plt.subplot(1, 2, 2)
