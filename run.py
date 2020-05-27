@@ -150,7 +150,7 @@ if __name__ == '__main__':
                 ###print(test_d) # Test print
                 # Calculate losses for real and fake batches
                 dis_loss = loss_discriminator(d, d_g, loss_type=loss_type, batch_size=b_size)
-                print("Discriminator Loss {}: {}".format(dis_i, dis_loss))
+                # print("Discriminator Loss {}: {}".format(dis_i, dis_loss))
                 # Calculate gradients for Discrim
                 dis_loss.backward()
                 # Update D
@@ -172,7 +172,7 @@ if __name__ == '__main__':
             gen_loss.backward()
             # Update G
             optimizerG.step()
-            D_G_z2 = d_g.mean.item()
+            D_G_z2 = d_g.mean().item()
 
             # Output training stats
             if i % 50 == 0:
