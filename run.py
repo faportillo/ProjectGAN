@@ -46,7 +46,7 @@ if __name__ == '__main__':
     d_lr = 0.0004
     beta1 = 0.0  # Beta1 hyperparam for Adam optimizers
     beta2 = 0.9
-    loss_type = 'BCE'  # Options: BCE, Hinge, Wass
+    loss_type = 'Hinge'  # Options: BCE, Hinge, Wass, DCGAN
     ngpu = 1  # Number of GPUs available. Use 0 for CPU mode.
     workers = 32  # number of workers for dataloader
     discrim_iters = 3  # Num of times to train discriminator before generator
@@ -188,8 +188,8 @@ if __name__ == '__main__':
             iters += 1
 
     # Ssve models after training
-    torch.save(netD.state_dict(), 'saved_models/discriminator_' + model_type + '.pt')
-    torch.save(netG.state_dict(), 'saved_models/generator' + model_type + '.pt')
+    torch.save(netD.state_dict(), 'saved_models/discriminator_' + model_type + '_'+ loss_type + '.pt')
+    torch.save(netG.state_dict(), 'saved_models/generator' + model_type+ '_'+ loss_type + '.pt')
     if args.dev is False:
         plt.figure(figsize=(10, 5))
         plt.title("Generator and Discriminator Loss During Training")
