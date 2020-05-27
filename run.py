@@ -33,8 +33,8 @@ if __name__ == '__main__':
     random.seed(manualSeed)
     torch.manual_seed(manualSeed)'''
 
-    dataroot = os.path.abspath("./data/CelebA")
-    model_type = 'SAGAN'  # Supported : DCGAN, SAGAN
+    dataroot = os.path.abspath("D:\CelebA")
+    model_type = 'DCGAN'  # Supported : DCGAN, SAGAN
     batch_size = 128
     image_size = 64
     nc = 3  # Number of channels in the training images
@@ -46,7 +46,7 @@ if __name__ == '__main__':
     d_lr = 0.0004
     beta1 = 0.0  # Beta1 hyperparam for Adam optimizers
     beta2 = 0.9
-    loss_type = 'Hinge'  # Options: BCE, Hinge, Wass, DCGAN
+    loss_type = 'BCE'  # Options: BCE, Hinge, Wass, DCGAN
     ngpu = 1  # Number of GPUs available. Use 0 for CPU mode.
     workers = 32  # number of workers for dataloader
     discrim_iters = 3  # Num of times to train discriminator before generator
@@ -115,7 +115,7 @@ if __name__ == '__main__':
         criterion = nn.HingeEmbeddingLoss()
     elif loss_type == 'Wass':
         fake_label = -1
-        pass  # ToDO: Implement Wasserstein Loss as class
+        # ToDO: Implement Wasserstein Loss as class
     elif loss_type == 'DCGAN':
         pass  # ToDO: Implement DCGAN Loss as class
     else:
@@ -158,6 +158,7 @@ if __name__ == '__main__':
 
                 # Generate batch of latent vectors
                 noise = torch.randn(b_size, nz, 1, 1, device=device)
+                d_loss.backward()
                 # Generate FAKE image batch with Gen
                 fake = netG(noise)
                 label.fill_(fake_label)
@@ -171,7 +172,6 @@ if __name__ == '__main__':
                 # print("Discriminator Loss {}: {}".format(dis_i, dis_loss))
 
                 # Calculate gradients for Discrim
-                d_loss.backward()
                 dg_loss.backward()
                 dis_loss = d_loss + dg_loss
                 # Update D
