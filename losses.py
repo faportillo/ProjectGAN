@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
+import torch.nn.functional as F
 
 
 def loss_discriminator(d, d_g, loss_type='BCE', batch_size=None):
@@ -14,9 +15,15 @@ def loss_discriminator(d, d_g, loss_type='BCE', batch_size=None):
         except TypeError:
             print('TypeError: Batch size cannot be \'None\' for loss type \'BCE\'')
     elif loss_type == 'Wass':  # Wasserstein Distance Loss
-        return -d.mean() + d_g.mean()
+        return -torch.mean(d) + torch.mean(d_g)
     elif loss_type == 'Hinge':  # Hinge Loss
-        return nn.ReLU()(1.0 - d.mean()) + nn.ReLU()(1.0 + d_g.mean())
+        loss = torch.mean(F.relu(1.0 - d))
+        loss += torch.mean(F.relu(1.0 + d_g))
+        return loss
+    elif loss_type == 'DCGAN':
+        loss = torch.mean(F.softplus(-d))
+        loss += torch.mean(F.softplus(d_g))
+        return loss
     else:
         raise ValueError('''Unsupported Loss Type!
                             Supported losses for Discriminator are:
@@ -35,7 +42,11 @@ def loss_generator(d_g, loss_type='BCE', batch_size=None):
     elif loss_type == 'Wass':  # Wasserstein Distance Loss
         return -d_g.mean()
     elif loss_type == 'Hinge':  # Hinge Loss
-        return -d_g.mean()
+        loss = -torch.mean(d_g)
+        return loss
+    elif loss_type == 'DCGAN':
+        loss = torch.mean(F.softplus(-d_g))
+        return loss
     else:
         raise ValueError('''Unsupported Loss Type!
                             Supported losses for Generator are:
