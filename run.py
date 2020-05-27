@@ -150,7 +150,7 @@ if __name__ == '__main__':
                 # Format batch
                 real_cpu = data[0].to(device)
                 b_size = real_cpu.size(0)
-                label = torch.full((b_size,), real_label, device=device)
+                label = torch.full((b_size, 1), real_label, device=device)
                 # Forward pass REAL batch through Discrim D(x)
                 d = netD(real_cpu).view(-1, 1)
                 # Calculate loss for REAL Batch
@@ -185,7 +185,7 @@ if __name__ == '__main__':
             netG.zero_grad()
             # Generate batch of latent vectors
             noise = torch.randn(batch_size, nz, 1, 1, device=device)
-            label = torch.full((batch_size,), real_label, device=device)
+            label = torch.full((batch_size, 1), real_label, device=device)
             fake = netG(noise)
             d_g = netD(fake).view(-1, 1)
             # Calculate Gen's loss based on output
