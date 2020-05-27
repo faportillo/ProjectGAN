@@ -1,3 +1,5 @@
 saved_models/*
 *.pyc
 data*
+*.png
+*.PNG
