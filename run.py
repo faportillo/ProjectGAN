@@ -33,15 +33,15 @@ if __name__ == '__main__':
     random.seed(manualSeed)
     torch.manual_seed(manualSeed)'''
 
-    dataroot = os.path.abspath("D:\CelebA")
-    model_type = 'DCGAN'  # Supported : DCGAN, SAGAN
+    dataroot = os.path.abspath("./data/CelebA")
+    model_type = 'SAGAN'  # Supported : DCGAN, SAGAN
     batch_size = 128
     image_size = 64
     nc = 3  # Number of channels in the training images
     nz = 100  # Size of z latent vector (i.e. size of generator input)
-    ngf = 128  # Size of feature maps in generator, relates to depth
-    ndf = 128  # Size of feature maps in discriminator, relates to depth
-    num_epochs = 10  # Number of training epochs
+    ngf = 64  # Size of feature maps in generator, relates to depth
+    ndf = 64  # Size of feature maps in discriminator, relates to depth
+    num_epochs = 5  # Number of training epochs
     g_lr = 0.0001
     d_lr = 0.0004
     beta1 = 0.0  # Beta1 hyperparam for Adam optimizers
@@ -131,7 +131,7 @@ if __name__ == '__main__':
             ############################
             # (1) Update D network:
             ###########################
-            for _ in range(discrim_iters):
+            for dis_i in range(discrim_iters):
                 ## Train with all-real batch
                 netD.zero_grad()
                 netG.zero_grad()
@@ -150,6 +150,7 @@ if __name__ == '__main__':
                 ###print(test_d) # Test print
                 # Calculate losses for real and fake batches
                 dis_loss = loss_discriminator(d, d_g, loss_type=loss_type, batch_size=b_size)
+                print("Discriminator Loss {}: {}".format(dis_i, dis_loss))
                 # Calculate gradients for Discrim
                 dis_loss.backward()
                 # Update D
@@ -189,7 +190,7 @@ if __name__ == '__main__':
     # Ssve models after training
     torch.save(netD.state_dict(), 'saved_models/discriminator_' + model_type + '.pt')
     torch.save(netG.state_dict(), 'saved_models/generator' + model_type + '.pt')
-    if args.dev:
+    if args.dev is False:
         plt.figure(figsize=(10, 5))
         plt.title("Generator and Discriminator Loss During Training")
         plt.plot(G_losses, label="G")
