@@ -139,13 +139,13 @@ if __name__ == '__main__':
                 real_cpu = data[0].to(device)
                 b_size = real_cpu.size(0)
                 # Forward pass REAL batch through Discrim D(x)
-                d = netD(real_cpu).view(-1).unsqueeze(1)
+                d = netD(real_cpu).view(-1, 1)
                 # Generate batch of latent vectors
                 noise = torch.randn(b_size, nz, 1, 1, device=device)
                 # Generate FAKE image batch with Gen
                 fake = netG(noise)
                 # Classify all fake batch with Discrim: D(G(z))
-                d_g = netD(fake.detach()).view(-1).unsqueeze(1)
+                d_g = netD(fake.detach()).view(-1, 1)
                 ###test_d = d_g.cpu().detach().numpy() # Test print
                 ###print(test_d) # Test print
                 # Calculate losses for real and fake batches
@@ -155,6 +155,8 @@ if __name__ == '__main__':
                 dis_loss.backward()
                 # Update D
                 optimizerD.step()
+                D_x = d.mean().item()
+                D_G_z1 = d_g.mean().item()
 
             ############################
             # (2) Update G network: maximize log(D(G(z)))
@@ -163,19 +165,20 @@ if __name__ == '__main__':
             # Generate batch of latent vectors
             noise = torch.randn(batch_size, nz, 1, 1, device=device)
             fake = netG(noise)
-            d_g = netD(fake).view(-1).unsqueeze(1)
+            d_g = netD(fake).view(-1, 1)
             # Calculate Gen's loss based on output
             gen_loss = loss_generator(d_g, loss_type=loss_type, batch_size=batch_size)
             # Calcualte gradient for G
             gen_loss.backward()
             # Update G
             optimizerG.step()
+            D_G_z2 = d_g.mean.item()
 
             # Output training stats
             if i % 50 == 0:
-                print('[{}/{}][{}/{}]\tLoss_D: {}\tLoss_G: {}'
+                print('[{}/{}][{}/{}]\tLoss_D: {}\tLoss_G: {}\tD(x): {}\tD(G(z)): {}/{}'
                       .format(epoch + 1, num_epochs, i, len(dataloader),
-                              dis_loss.item(), gen_loss.item()))
+                              dis_loss.item(), gen_loss.item(), D_x, D_G_z1, D_G_z2))
             # Save Losses for plotting later
             G_losses.append(dis_loss.item())
             D_losses.append(gen_loss.item())
@@ -188,8 +191,8 @@ if __name__ == '__main__':
             iters += 1
 
     # Ssve models after training
-    torch.save(netD.state_dict(), 'saved_models/discriminator_' + model_type + '_'+ loss_type + '.pt')
-    torch.save(netG.state_dict(), 'saved_models/generator' + model_type+ '_'+ loss_type + '.pt')
+    torch.save(netD.state_dict(), 'saved_models/discriminator_' + model_type + '_' + loss_type + '.pt')
+    torch.save(netG.state_dict(), 'saved_models/generator' + model_type + '_' + loss_type + '.pt')
     if args.dev is False:
         plt.figure(figsize=(10, 5))
         plt.title("Generator and Discriminator Loss During Training")
