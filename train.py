@@ -64,7 +64,7 @@ if __name__ == '__main__':
     clip_value = 0.01
     ngpu = args.num_gpu  # Number of GPUs available. Use 0 for CPU mode.
     workers = 32  # number of workers for dataloader
-    discrim_iters = 3  # Num of times to train discriminator before generator
+    discrim_iters = 1  # Num of times to train discriminator before generator
 
     dataset = dset.ImageFolder(root=dataroot,
                                transform=transforms.Compose([
@@ -157,7 +157,8 @@ if __name__ == '__main__':
             # Forward pass REAL batch through Discrim D(x)
             d = netD(real_cpu).view(-1, 1)
             # Classify all FAKE batch with Discrim: D(G(z))
-            d_g = netD(fake.detach()).view(-1, 1)
+            fake = netG(noise)
+            d_g = netD(fake).view(-1, 1)
             dis_loss = loss_discriminator(d, d_g, loss_type=loss_type,
                                           batch_size=batch_size)
             # Update D
@@ -166,12 +167,13 @@ if __name__ == '__main__':
             if loss_type == 'Wass':
                 for p in netD.parameters():
                     p.data.clamp_(-clip_value, clip_value)
-            D_x = d.mean()
-            D_G_z1 = d_g.mean()
+            D_x = d.mean().item()
+            D_G_z1 = d_g.mean().item()
 
             ############################
             # (2) Update G network: maximize log(D(G(z)))
             ###########################
+            D_G_z2 = 0.0
             if i % discrim_iters == 0:
                 optimizerG.zero_grad()
                 # Generate batch of latent vectors
@@ -184,14 +186,14 @@ if __name__ == '__main__':
                 gen_loss.backward()
                 # Update G
                 optimizerG.step()
-                D_G_z2 = d_g.mean()
+                D_G_z2 = d_g.mean().item()
 
             # Output training stats
             if i % 50 == 0:
                 print('[{}/{}][{}/{}]\tLoss_D: {}\tLoss_G: {}\tD(x): {}\tD(G(z)): {}/{}'
                       .format(epoch + 1, num_epochs, i, len(dataloader),
                               dis_loss.item(), gen_loss.item(),
-                              D_x.item(), D_G_z1.item(), D_G_z2.item()))
+                              D_x, D_G_z1, D_G_z2))
                 # Save Losses for plotting later
                 G_losses.append(dis_loss.item())
                 D_losses.append(gen_loss.item())
