@@ -198,7 +198,7 @@ if __name__ == '__main__':
             # Generate batch of latent vectors
             # noise = torch.randn(batch_size, nz, 1, 1, device=device)
             # label = torch.full((batch_size, 1), real_label, device=device)
-            label.fill(real_label)
+            label.fill_(real_label)
             # fake = netG(noise)
             d_g = netD(fake).view(-1, 1)
             # Calculate Gen's loss based on output
