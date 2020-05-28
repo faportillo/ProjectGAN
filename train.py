@@ -160,7 +160,7 @@ if __name__ == '__main__':
             fake = netG(noise)
             d_g = netD(fake).view(-1, 1)
             dis_loss = loss_discriminator(d, d_g, loss_type=loss_type,
-                                          batch_size=batch_size)
+                                          batch_size=b_size)
             # Update D
             optimizerD.step()
             # Clip weights if using Wasserstein Loss
