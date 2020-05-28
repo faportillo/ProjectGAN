@@ -55,8 +55,8 @@ if __name__ == '__main__':
     ngf = args.gen_features  # Size of feature maps in generator, relates to depth
     ndf = args.dis_features  # Size of feature maps in discriminator, relates to depth
     num_epochs = 5  # Number of training epochs
-    g_lr = 0.001
-    d_lr = 0.001
+    g_lr = 0.0002
+    d_lr = 0.0002
     use_scheduler = False
     beta1 = 0.5  # Beta1 hyperparam for Adam optimizers
     beta2 = 0.999
