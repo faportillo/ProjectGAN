@@ -5,7 +5,7 @@ import torch.nn.functional as F
 
 
 def wasserstein_loss(output, target):
-    return -torch.mean(output)
+    return -torch.mean(output * target)
 
 
 def loss_discriminator(d, d_g, loss_type='BCE', batch_size=None):
@@ -21,8 +21,9 @@ def loss_discriminator(d, d_g, loss_type='BCE', batch_size=None):
     elif loss_type == 'Wass':  # Wasserstein Distance Loss
         return -torch.mean(d) + torch.mean(d_g)
     elif loss_type == 'Hinge':  # Hinge Loss
-        loss = torch.mean(F.relu(1.0 - d))
-        loss += torch.mean(F.relu(1.0 + d_g))
+        loss = torch.mean(torch.min(Variable(torch.zeros(batch_size, 1).cuda(),
+                                             -1.0 + d)))
+        loss += torch.mean(torch.min(Variable(torch.zeros(batch_size, 1).cuda(), -1.0 - d_g)))
         return loss
     elif loss_type == 'DCGAN':
         loss = torch.mean(F.softplus(-d))

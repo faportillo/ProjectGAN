@@ -47,7 +47,7 @@ if __name__ == '__main__':
     torch.manual_seed(manualSeed)
 
     dataroot = os.path.abspath(args.data_path)
-    model_type = 'DCGAN'  # Supported : DCGAN, SAGAN
+    model_type = 'SAGAN'  # Supported : DCGAN, SAGAN
     batch_size = 128
     image_size = 64
     nc = args.num_channel  # Number of channels in the training images
@@ -55,13 +55,11 @@ if __name__ == '__main__':
     ngf = args.gen_features  # Size of feature maps in generator, relates to depth
     ndf = args.dis_features  # Size of feature maps in discriminator, relates to depth
     num_epochs = 5  # Number of training epochs
-    g_lr = 0.001
-    d_lr = 0.001
-    use_scheduler = False
+    g_lr = 0.0002
+    d_lr = 0.0002
     beta1 = 0.5  # Beta1 hyperparam for Adam optimizers
     beta2 = 0.999
     loss_type = 'BCE'  # Options: BCE, Hinge, Wass, DCGAN
-    clip_value = 0.01
     ngpu = args.num_gpu  # Number of GPUs available. Use 0 for CPU mode.
     workers = 32  # number of workers for dataloader
     discrim_iters = 3  # Num of times to train discriminator before generator
@@ -124,14 +122,26 @@ if __name__ == '__main__':
     # Conventions for real and fake labels during training
     real_label = 1
     fake_label = 0
+    if loss_type == 'BCE':
+        criterion = nn.BCELoss()
+    elif loss_type == 'Hinge':
+        criterion = nn.HingeEmbeddingLoss()
+    elif loss_type == 'Wass':
+        fake_label = -1
+        # ToDO: Implement Wasserstein Loss as class
+    elif loss_type == 'DCGAN':
+        pass  # ToDO: Implement DCGAN Loss as class
+    else:
+        raise ValueError('''Unsupported Loss Type!
+                            Supported losses for Discriminator are:
+                            \'BCE\', \'Wass\', \'Hinge\'''')
+
+    print("Loss type: {}".format(criterion))
 
     # Setup optimizers for Generator and Discriminator
     optimizerG = optim.Adam(netG.parameters(), lr=g_lr, betas=(beta1, beta2))
     optimizerD = optim.Adam(netD.parameters(), lr=d_lr, betas=(beta1, beta2))
 
-    # use an exponentially decaying learning rate
-    scheduler_d = optim.lr_scheduler.ExponentialLR(optimizerD, gamma=0.99)
-    scheduler_g = optim.lr_scheduler.ExponentialLR(optimizerG, gamma=0.99)
     """
         TRAINING LOOP
     """
@@ -147,44 +157,59 @@ if __name__ == '__main__':
             ############################
             # (1) Update D network:
             ###########################
-            ## Train with all-real batch
-            optimizerD.zero_grad()
-            # Format batch
-            real_cpu = data[0].to(device)
-            b_size = real_cpu.size(0)
-            # Generate batch of latent vectors
-            noise = torch.randn(b_size, nz, 1, 1, device=device)
-            # Forward pass REAL batch through Discrim D(x)
-            d = netD(real_cpu).view(-1, 1)
-            # Classify all FAKE batch with Discrim: D(G(z))
-            d_g = netD(fake.detach()).view(-1, 1)
-            dis_loss = loss_discriminator(d, d_g, loss_type=loss_type,
-                                          batch_size=batch_size)
-            # Update D
-            optimizerD.step()
-            # Clip weights if using Wasserstein Loss
-            if loss_type == 'Wass':
-                for p in netD.parameters():
-                    p.data.clamp_(-clip_value, clip_value)
-            D_x = d.mean()
-            D_G_z1 = d_g.mean()
+            for dis_i in range(discrim_iters):
+                ## Train with all-real batch
+                netD.zero_grad()
+                netG.zero_grad()
+                # Format batch
+                real_cpu = data[0].to(device)
+                b_size = real_cpu.size(0)
+                label = torch.full((b_size, 1), real_label, device=device)
+                # Forward pass REAL batch through Discrim D(x)
+                d = netD(real_cpu).view(-1, 1)
+                # Calculate loss for REAL Batch
+                d_loss = criterion(d, label)
+
+                # Generate batch of latent vectors
+                noise = torch.randn(b_size, nz, 1, 1, device=device)
+                d_loss.backward()
+                # Generate FAKE image batch with Gen
+                fake = netG(noise)
+                label.fill_(fake_label)
+                # Classify all fake batch with Discrim: D(G(z))
+                d_g = netD(fake.detach()).view(-1, 1)
+                ###test_d = d_g.cpu().detach().numpy() # Test print
+                ###print(test_d) # Test print
+                # Calculate losses for real and fake batches
+                dg_loss = criterion(d_g, label)
+                # dis_loss = loss_discriminator(d, d_g, loss_type=loss_type, batch_size=b_size)
+                # print("Discriminator Loss {}: {}".format(dis_i, dis_loss))
+
+                # Calculate gradients for Discrim
+                dg_loss.backward()
+                dis_loss = d_loss + dg_loss
+                # Update D
+                optimizerD.step()
+                D_x = d.mean()
+                D_G_z1 = d_g.mean()
 
             ############################
             # (2) Update G network: maximize log(D(G(z)))
             ###########################
-            if i % discrim_iters == 0:
-                optimizerG.zero_grad()
-                # Generate batch of latent vectors
-                noise = torch.randn(batch_size, nz, 1, 1, device=device)
-                fake = netG(noise)
-                d_g = netD(fake).view(-1, 1)
-                # Calculate Gen's loss based on output
-                gen_loss = loss_generator(d_g, loss_type=loss_type, batch_size=batch_size)
-                # Calcualte gradient for G
-                gen_loss.backward()
-                # Update G
-                optimizerG.step()
-                D_G_z2 = d_g.mean()
+            netG.zero_grad()
+            # Generate batch of latent vectors
+            noise = torch.randn(batch_size, nz, 1, 1, device=device)
+            label = torch.full((batch_size, 1), real_label, device=device)
+            fake = netG(noise)
+            d_g = netD(fake).view(-1, 1)
+            # Calculate Gen's loss based on output
+            # gen_loss = loss_generator(d_g, loss_type=loss_type, batch_size=batch_size)
+            gen_loss = criterion(d_g, label)
+            # Calcualte gradient for G
+            gen_loss.backward()
+            # Update G
+            optimizerG.step()
+            D_G_z2 = d_g.mean()
 
             # Output training stats
             if i % 50 == 0:
@@ -202,10 +227,6 @@ if __name__ == '__main__':
                     img_list.append(vutils.make_grid(fake, padding=2, normalize=True))
 
                 iters += 1
-
-            if use_scheduler:
-                scheduler_d.step()
-                scheduler_g.step()
 
         # Ssve models after training
         torch.save(netD.state_dict(), 'saved_models/discriminator_' + model_type + '_' + loss_type + '.pt')

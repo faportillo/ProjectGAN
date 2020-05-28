@@ -68,7 +68,7 @@ if __name__ == '__main__':
     if (device.type == 'cuda') and (ngpu > 1):
         netG = nn.DataParallel(netG, list(range(ngpu)))
 
-    torch.load(args.model_file)
+    netG.load_state_dict(torch.load(args.model_file))
     netG.eval()
     print(netG)
 
