@@ -162,7 +162,7 @@ if __name__ == '__main__':
             # Format batch
             real_cpu = data[0].to(device)
             b_size = real_cpu.size(0)
-            label = torch.full((b_size), real_label, device=device)
+            label = torch.full((b_size,), real_label, device=device)
             # Forward pass REAL batch through Discrim D(x)
             d = netD(real_cpu).view(-1)
             # Calculate loss for REAL Batch
