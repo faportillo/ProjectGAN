@@ -4,6 +4,10 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 
 
+def wasserstein_loss(output, target):
+    return -torch.mean(output)
+
+
 def loss_discriminator(d, d_g, loss_type='BCE', batch_size=None):
     if loss_type == 'BCE':  # Binary Cross-Entropy Error
         try:

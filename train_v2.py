@@ -157,50 +157,49 @@ if __name__ == '__main__':
             ############################
             # (1) Update D network:
             ###########################
-            for dis_i in range(discrim_iters):
-                ## Train with all-real batch
-                netD.zero_grad()
-                netG.zero_grad()
-                # Format batch
-                real_cpu = data[0].to(device)
-                b_size = real_cpu.size(0)
-                label = torch.full((b_size, 1), real_label, device=device)
-                # Forward pass REAL batch through Discrim D(x)
-                d = netD(real_cpu).view(-1, 1)
-                # Calculate loss for REAL Batch
-                d_loss = criterion(d, label)
+            ## Train with all-real batch
+            netD.zero_grad()
+            # Format batch
+            real_cpu = data[0].to(device)
+            b_size = real_cpu.size(0)
+            label = torch.full((b_size), real_label, device=device)
+            # Forward pass REAL batch through Discrim D(x)
+            d = netD(real_cpu).view(-1)
+            # Calculate loss for REAL Batch
+            d_loss = criterion(d, label)
+            d_loss.backward()
 
-                # Generate batch of latent vectors
-                noise = torch.randn(b_size, nz, 1, 1, device=device)
-                d_loss.backward()
-                # Generate FAKE image batch with Gen
-                fake = netG(noise)
-                label.fill_(fake_label)
-                # Classify all fake batch with Discrim: D(G(z))
-                d_g = netD(fake.detach()).view(-1, 1)
-                ###test_d = d_g.cpu().detach().numpy() # Test print
-                ###print(test_d) # Test print
-                # Calculate losses for real and fake batches
-                dg_loss = criterion(d_g, label)
-                # dis_loss = loss_discriminator(d, d_g, loss_type=loss_type, batch_size=b_size)
-                # print("Discriminator Loss {}: {}".format(dis_i, dis_loss))
+            # Generate batch of latent vectors
+            noise = torch.randn(b_size, nz, 1, 1, device=device)
+            # Generate FAKE image batch with Gen
+            fake = netG(noise)
+            label.fill_(fake_label)
+            # Classify all fake batch with Discrim: D(G(z))
+            d_g = netD(fake.detach()).view(-1)
+            ###test_d = d_g.cpu().detach().numpy() # Test print
+            ###print(test_d) # Test print
+            # Calculate losses for real and fake batches
+            dg_loss = criterion(d_g, label)
+            # dis_loss = loss_discriminator(d, d_g, loss_type=loss_type, batch_size=b_size)
+            # print("Discriminator Loss {}: {}".format(dis_i, dis_loss))
 
-                # Calculate gradients for Discrim
-                dg_loss.backward()
-                dis_loss = d_loss + dg_loss
-                # Update D
-                optimizerD.step()
-                D_x = d.mean()
-                D_G_z1 = d_g.mean()
+            # Calculate gradients for Discrim
+            dg_loss.backward()
+            dis_loss = d_loss + dg_loss
+            # Update D
+            optimizerD.step()
+            D_x = d.mean()
+            D_G_z1 = d_g.mean()
 
             ############################
             # (2) Update G network: maximize log(D(G(z)))
             ###########################
             netG.zero_grad()
             # Generate batch of latent vectors
-            noise = torch.randn(batch_size, nz, 1, 1, device=device)
-            label = torch.full((batch_size, 1), real_label, device=device)
-            fake = netG(noise)
+            # noise = torch.randn(batch_size, nz, 1, 1, device=device)
+            # label = torch.full((batch_size, 1), real_label, device=device)
+            label.fill(real_label)
+            # fake = netG(noise)
             d_g = netD(fake).view(-1, 1)
             # Calculate Gen's loss based on output
             # gen_loss = loss_generator(d_g, loss_type=loss_type, batch_size=batch_size)
