@@ -20,24 +20,6 @@ from gans import init_weights, GeneratorBasic, DiscriminatorBasic, \
 from losses import loss_discriminator, loss_generator
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-data_path', '-p', type=str, default='./data/CelebA',
-                        help='Directory path for dataset')
-    parser.add_argument('-dev', type=bool, default=False,
-                        help='Set -dev to True so progress images are not displayed')
-    parser.add_argument('-num_channel', '-nc', type=int, default=3,
-                        help='Number of channels in the training images.')
-    parser.add_argument('-z_size', '-nz', type=int, default=100,
-                        help='Size of z latent vector (i.e. size of generator input).')
-    parser.add_argument('-gen_features', '-ngf', type=int, default=64,
-                        help='Size of feature maps in generator, relates to depth.')
-    parser.add_argument('-dis_features', '-ndf', type=int, default=64,
-                        help='Size of feature maps in discriminator, relates to depth.')
-    parser.add_argument('-num_gpu', '-ngpu', type=int, default=1,
-                        help='Number of GPUs to run on system. Set to 0 for CPU only.')
-    parser.add_argument('-num_images', '-ni', type=int, default=64,
-                        help='Number of images to generator.')
-    args = parser.parse_args()
     """
         DEFINE DATASET AND TRAINING HYPERPARAMETERS
     """
@@ -46,23 +28,20 @@ if __name__ == '__main__':
     random.seed(manualSeed)
     torch.manual_seed(manualSeed)
 
-    dataroot = os.path.abspath(args.data_path)
+    dataroot = os.path.abspath("D:\CelebA")
     model_type = 'DCGAN'  # Supported : DCGAN, SAGAN
     batch_size = 128
     image_size = 64
-    nc = args.num_channel  # Number of channels in the training images
-    nz = args.z_size  # Size of z latent vector (i.e. size of generator input)
-    ngf = args.gen_features  # Size of feature maps in generator, relates to depth
-    ndf = args.dis_features  # Size of feature maps in discriminator, relates to depth
+    nc = 3  # Number of channels in the training images
+    nz = 100  # Size of z latent vector (i.e. size of generator input)
+    ngf = 64  # Size of feature maps in generator, relates to depth
+    ndf = 64  # Size of feature maps in discriminator, relates to depth
     num_epochs = 5  # Number of training epochs
-    g_lr = 0.0002
-    d_lr = 0.0002
+    lr = 0.0002
     beta1 = 0.5  # Beta1 hyperparam for Adam optimizers
-    beta2 = 0.999
-    loss_type = 'BCE'  # Options: BCE, Hinge, Wass, DCGAN
-    ngpu = args.num_gpu  # Number of GPUs available. Use 0 for CPU mode.
+
+    ngpu = 1  # Number of GPUs available. Use 0 for CPU mode.
     workers = 32  # number of workers for dataloader
-    discrim_iters = 3  # Num of times to train discriminator before generator
 
     dataset = dset.ImageFolder(root=dataroot,
                                transform=transforms.Compose([
@@ -93,27 +72,23 @@ if __name__ == '__main__':
         CREATE MODELS and INITIALIZE TRAINING VARIABLES
     '''
     # Create generator and discriminator models
-    if model_type == 'DCGAN':
-        netG = GeneratorBasic(nc=nc, nz=nz, ngf=ngf, ngpu=ngpu).to(device)
-        netD = DiscriminatorBasic(nc=nc, ndf=ndf, ngpu=ngpu).to(device)
-    elif model_type == 'SAGAN':
-        netG = GeneratorSAGAN(nc=nc, nz=nz, ngf=ngf, ngpu=ngpu).to(device)
-        netD = DiscriminatorSAGAN(nc=nc, ndf=ndf, ngpu=ngpu).to(device)
-    else:
-        print("Unsupported Model type!")
-        sys.exit()
+
+    netG = GeneratorBasic(nc=nc, nz=nz, ngf=ngf, ngpu=ngpu).to(device)
     # Do multi-gpu, if possible
     if (device.type == 'cuda') and (ngpu > 1):
         netG = nn.DataParallel(netG, list(range(ngpu)))
 
-    # netG.apply(init_weights)
+    netG.apply(init_weights)
     print(netG)
 
+    netD = DiscriminatorBasic(nc=nc, ndf=ndf, ngpu=ngpu).to(device)
     if (device.type == 'cuda') and (ngpu > 1):
         netD = nn.DataParallel(netD, list(range(ngpu)))
 
-    # netD.apply(init_weights)
+    netD.apply(init_weights)
     print(netD)
+
+    criterion = nn.BCELoss()
 
     # Create batch of latent vectors used to visualize
     # the progression of generator
@@ -122,25 +97,12 @@ if __name__ == '__main__':
     # Conventions for real and fake labels during training
     real_label = 1
     fake_label = 0
-    if loss_type == 'BCE':
-        criterion = nn.BCELoss()
-    elif loss_type == 'Hinge':
-        criterion = nn.HingeEmbeddingLoss()
-    elif loss_type == 'Wass':
-        fake_label = -1
-        # ToDO: Implement Wasserstein Loss as class
-    elif loss_type == 'DCGAN':
-        pass  # ToDO: Implement DCGAN Loss as class
-    else:
-        raise ValueError('''Unsupported Loss Type!
-                            Supported losses for Discriminator are:
-                            \'BCE\', \'Wass\', \'Hinge\'''')
 
     print("Loss type: {}".format(criterion))
 
     # Setup optimizers for Generator and Discriminator
-    optimizerG = optim.Adam(netG.parameters(), lr=g_lr, betas=(beta1, beta2))
-    optimizerD = optim.Adam(netD.parameters(), lr=d_lr, betas=(beta1, beta2))
+    optimizerG = optim.Adam(netG.parameters(), lr=lr, betas=(beta1, 0.999))
+    optimizerD = optim.Adam(netD.parameters(), lr=lr, betas=(beta1, 0.999))
 
     """
         TRAINING LOOP
@@ -226,43 +188,43 @@ if __name__ == '__main__':
             iters += 1
 
         # Ssve models after training
-        torch.save(netD.state_dict(), 'saved_models/discriminator_' + model_type + '_' + loss_type + '.pt')
-        torch.save(netG.state_dict(), 'saved_models/generator' + model_type + '_' + loss_type + '.pt')
-        if args.dev is False:
-            plt.figure(figsize=(10, 5))
-            plt.title("Generator and Discriminator Loss During Training")
-            plt.plot(G_losses, label="G")
-            plt.plot(D_losses, label="D")
-            plt.xlabel("iterations")
-            plt.ylabel("Loss")
-            plt.legend()
-            # plt.show()
-            plt.savefig('GenDiscrimLoss.png', bbox_inches='tight')
+        torch.save(netD.state_dict(), 'saved_models/discriminator_' + model_type + '.pt')
+        torch.save(netG.state_dict(), 'saved_models/generator' + model_type + '_' + '.pt')
 
-            # %%capture
-            fig = plt.figure(figsize=(8, 8))
-            plt.axis("off")
-            ims = [[plt.imshow(np.transpose(i, (1, 2, 0)), animated=True)] for i in img_list]
-            ani = animation.ArtistAnimation(fig, ims, interval=1000, repeat_delay=1000, blit=True)
+        plt.figure(figsize=(10, 5))
+        plt.title("Generator and Discriminator Loss During Training")
+        plt.plot(G_losses, label="G")
+        plt.plot(D_losses, label="D")
+        plt.xlabel("iterations")
+        plt.ylabel("Loss")
+        plt.legend()
+        # plt.show()
+        plt.savefig('GenDiscrimLoss.png', bbox_inches='tight')
 
-            HTML(ani.to_jshtml())
+        # %%capture
+        fig = plt.figure(figsize=(8, 8))
+        plt.axis("off")
+        ims = [[plt.imshow(np.transpose(i, (1, 2, 0)), animated=True)] for i in img_list]
+        ani = animation.ArtistAnimation(fig, ims, interval=1000, repeat_delay=1000, blit=True)
 
-            # Grab a batch of real images from the dataloader
-            real_batch = next(iter(dataloader))
+        HTML(ani.to_jshtml())
 
-            # Plot the real images
-            plt.figure(figsize=(15, 15))
-            plt.subplot(1, 2, 1)
-            plt.axis("off")
-            plt.title("Real Images")
-            plt.imshow(
-                np.transpose(vutils.make_grid(real_batch[0].to(device)[:64],
-                                              padding=5, normalize=True).cpu(), (1, 2, 0)))
-            plt.savefig("real_images.png", bbox_inches='tight')
-            # Plot the fake images from the last epoch
-            plt.subplot(1, 2, 2)
-            plt.axis("off")
-            plt.title("Fake Images")
-            plt.imshow(np.transpose(img_list[-1], (1, 2, 0)))
-            plt.show()
-            plt.savefig("fake_images.png", bbox_inches='tight')
+        # Grab a batch of real images from the dataloader
+        real_batch = next(iter(dataloader))
+
+        # Plot the real images
+        plt.figure(figsize=(15, 15))
+        plt.subplot(1, 2, 1)
+        plt.axis("off")
+        plt.title("Real Images")
+        plt.imshow(
+            np.transpose(vutils.make_grid(real_batch[0].to(device)[:64],
+                                          padding=5, normalize=True).cpu(), (1, 2, 0)))
+        plt.savefig("real_images.png", bbox_inches='tight')
+        # Plot the fake images from the last epoch
+        plt.subplot(1, 2, 2)
+        plt.axis("off")
+        plt.title("Fake Images")
+        plt.imshow(np.transpose(img_list[-1], (1, 2, 0)))
+        plt.show()
+        plt.savefig("fake_images.png", bbox_inches='tight')
