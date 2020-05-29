@@ -151,6 +151,7 @@ if __name__ == '__main__':
             ###########################
             ## Train with all-real batch
             optimizerD.zero_grad()
+            netD.zero_grad()
             # Format batch
             real_cpu = data[0].to(device)
             b_size = real_cpu.size(0)
@@ -179,6 +180,7 @@ if __name__ == '__main__':
             D_G_z2 = 0.0
             if i % discrim_iters == 0:
                 optimizerG.zero_grad()
+                netG.zero_grad()
                 # Generate batch of latent vectors
                 noise = torch.randn(batch_size, nz, 1, 1, device=device)
                 fake = netG(noise)
