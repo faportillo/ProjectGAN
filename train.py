@@ -144,6 +144,8 @@ if __name__ == '__main__':
     for epoch in range(num_epochs):
         # for each batch in dataloader
         for i, data in enumerate(dataloader, 0):
+            netG.train()
+            netD.train()
             ############################
             # (1) Update D network:
             ###########################
@@ -161,6 +163,7 @@ if __name__ == '__main__':
             d_g = netD(fake).view(-1, 1)
             dis_loss = loss_discriminator(d, d_g, loss_type=loss_type,
                                           batch_size=b_size)
+            dis_loss.backward()
             # Update D
             optimizerD.step()
             # Clip weights if using Wasserstein Loss
@@ -199,6 +202,7 @@ if __name__ == '__main__':
                 D_losses.append(gen_loss.item())
                 # Check how the generator is doing by saving G's output on fixed_noise
                 if (iters % 500 == 0) or ((epoch == num_epochs - 1) and (i == len(dataloader) - 1)):
+                    netG.eval()
                     with torch.no_grad():
                         fake = netG(fixed_noise).detach().cpu()
                     img_list.append(vutils.make_grid(fake, padding=2, normalize=True))
