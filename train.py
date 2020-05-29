@@ -108,13 +108,13 @@ if __name__ == '__main__':
     if (device.type == 'cuda') and (ngpu > 1):
         netG = nn.DataParallel(netG, list(range(ngpu)))
 
-    # netG.apply(init_weights)
+    netG.apply(init_weights)
     print(netG)
 
     if (device.type == 'cuda') and (ngpu > 1):
         netD = nn.DataParallel(netD, list(range(ngpu)))
 
-    # netD.apply(init_weights)
+    netD.apply(init_weights)
     print(netD)
 
     # Create batch of latent vectors used to visualize
