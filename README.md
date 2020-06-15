@@ -20,8 +20,11 @@ Uses the ADAM Optimizer with different learning rates for both the Discriminator
 ______
 **Results**
 Results taken from the output of the Generator and compared to the "Real Images" from the CelebA dataset.
-![DCGAN]([https://drive.google.com/uc?export=view&id=](https://drive.google.com/uc?export=view&id=1KvhH0ve72PNrFWdtyimqnErKsbIPfOlo)
 
-![SAGAN]([https://drive.google.com/uc?export=view&id=](https://drive.google.com/uc?export=view&id=1zSKToizjKIFKgz9C6eg6WGs4LsrqN5RG)
+DCGAN:
+![DCGAN](https://drive.google.com/uc?export=view&id=1KvhH0ve72PNrFWdtyimqnErKsbIPfOlo)
+
+SAGAN:
+![SAGAN](https://drive.google.com/uc?export=view&id=1zSKToizjKIFKgz9C6eg6WGs4LsrqN5RG)
 
  
