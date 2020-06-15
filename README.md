@@ -19,9 +19,9 @@ Each model was trained on a single NVIDIA K40 GPU for 10 epochs.
 Uses the ADAM Optimizer with different learning rates for both the Discriminator and Generator. 
 ______
 **Results**
+Results taken from the output of the Generator and compared to the "Real Images" from the CelebA dataset.
+![DCGAN]([https://drive.google.com/uc?export=view&id=](https://drive.google.com/uc?export=view&id=1KvhH0ve72PNrFWdtyimqnErKsbIPfOlo)
 
-DCGAN:
-
-
+![SAGAN]([https://drive.google.com/uc?export=view&id=](https://drive.google.com/uc?export=view&id=1zSKToizjKIFKgz9C6eg6WGs4LsrqN5RG)
 
  
