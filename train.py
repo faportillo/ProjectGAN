@@ -11,6 +11,7 @@ import torch.utils.data
 import torchvision.datasets as dset
 import torchvision.transforms as transforms
 import torchvision.utils as vutils
+from torch.autograd import Variable
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
@@ -162,15 +163,19 @@ if __name__ == '__main__':
             # Classify all FAKE batch with Discrim: D(G(z))
             fake = netG(noise)
             d_g = netD(fake).view(-1, 1)
-            dis_loss = loss_discriminator(d, d_g, loss_type=loss_type,
-                                          batch_size=b_size)
+            '''dis_loss = loss_discriminator(d, d_g, loss_type=loss_type,
+                                          batch_size=b_size,
+                                          device=device)'''
+            dis_loss = -d.mean() + d_g.mean()
+
             dis_loss.backward()
+            print(netD.main[11].weight.grad)
             # Update D
             optimizerD.step()
             # Clip weights if using Wasserstein Loss
-            if loss_type == 'Wass':
-                for p in netD.parameters():
-                    p.data.clamp_(-clip_value, clip_value)
+            # if loss_type == 'Wass':
+            for p in netD.parameters():
+                p.data.clamp_(-clip_value, clip_value)
             D_x = d.mean().item()
             D_G_z1 = d_g.mean().item()
 
@@ -186,7 +191,10 @@ if __name__ == '__main__':
                 fake = netG(noise)
                 d_g = netD(fake).view(-1, 1)
                 # Calculate Gen's loss based on output
-                gen_loss = loss_generator(d_g, loss_type=loss_type, batch_size=batch_size)
+                '''gen_loss = loss_generator(d_g, loss_type=loss_type,
+                                          batch_size=batch_size,
+                                          device=device)'''
+                gen_loss = -d_g.mean()
                 # Calcualte gradient for G
                 gen_loss.backward()
                 # Update G
@@ -208,6 +216,7 @@ if __name__ == '__main__':
                     with torch.no_grad():
                         fake = netG(fixed_noise).detach().cpu()
                     img_list.append(vutils.make_grid(fake, padding=2, normalize=True))
+                    netG.train()
 
                 iters += 1
 

@@ -8,12 +8,12 @@ def wasserstein_loss(output, target):
     return -torch.mean(output * target)
 
 
-def loss_discriminator(d, d_g, loss_type='BCE', batch_size=None):
+def loss_discriminator(d, d_g, loss_type='BCE', batch_size=None, device=torch.device("cuda:0")):
     if loss_type == 'BCE':  # Binary Cross-Entropy Error
         try:
             if batch_size is not None:
-                return (nn.BCELoss()(d, Variable(torch.ones(batch_size, 1).cuda())) \
-                        + nn.BCELoss()(d_g, Variable(torch.zeros(batch_size, 1).cuda()))) / 2
+                return (nn.BCELoss()(d, torch.full((batch_size, 1), 1.0, device=device)) \
+                        + nn.BCELoss()(d_g, torch.full((batch_size, 1), 0.0, device=device)))
             else:
                 raise TypeError
         except TypeError:
@@ -35,11 +35,11 @@ def loss_discriminator(d, d_g, loss_type='BCE', batch_size=None):
                             \'BCE\', \'Wass\', \'Hinge\'''')
 
 
-def loss_generator(d_g, loss_type='BCE', batch_size=None):
+def loss_generator(d_g, loss_type='BCE', batch_size=None, device=torch.device("cuda:0")):
     if loss_type == 'BCE':  # Binary Cross-Entropy Error
         try:
             if batch_size is not None:
-                return nn.BCEWithLogitsLoss()(d_g, Variable(torch.ones(batch_size, 1).cuda()))
+                return nn.BCEWithLogitsLoss()(d_g, torch.full((batch_size, 1), 1, device=device))
             else:
                 raise TypeError
         except TypeError:
